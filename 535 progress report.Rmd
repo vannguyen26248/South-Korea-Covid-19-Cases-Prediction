@@ -1,0 +1,158 @@
+---
+title: 'Math 535: Project Progress Report'
+author: "Team Member: Yeheng Liang,Thi Van Nguyen, Matthew Heym, Hanzhu Yan"
+date: "4/30/2021"
+output:
+  pdf_document:
+    includes:
+      in_header: header.tex
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Introduction
+Coronavirus diseases 2019(COVID-19) has a strong impact on every aspect of the world. It is an infectious disease caused by severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2). COVID-19 outbreak was first reported in December 2019 in Wuhan, China, and has resulted in an ongoing pandemic. At the time of writing this study, the total number of confirmed cases passed over 150 millions in over 185 countries and territories around the world,resulting in more than 3.1 millions deaths. The World Health Organization has also announced that  COVID-19  will very likely remain for multiple years until 85 of the world population has vaccinated by effective COVID vaccine. It is very valuable to know what will happen in coming weeks or months that we can well prepare for possible wave.  
+
+## Data Source
+COVID-19 has infected more than 10,000 people in South Korea. KCDC (Korea Centers for Disease Control & Prevention) announces the information of COVID-19 quickly and transparently. They have made a structured dataset based on the report materials of KCDC and local governments.
+
+The data set can be found on kaggle:url{https://www.kaggle.com/kimjihoo/coronavirusdataset}
+
+This big data set has many sub data set with different aspect about COVID-19. We decided to pick weather, search trend and policy  to work on for our prediction. The reason that I pick weather in that SARS first found in November 2002 in Guangdong, China was ended in June 2003 for no apparent reason. Guangdong is the southern part of China that experience hot and wet weather around June. So, it is likely that COVID-19 case have negative association with temperature and humidity. Then, we pick search trend because it is very likely for a person to search more information about COVID-19 when they or their friends and family is experiencing COVID-19 related symptoms. Lastly, policies are essential to stopping the spread of COVID-19 like shelter in place, wearing a mask and social distancing.
+
+## Data Cleaning
+The data sets given by kaggle are raw data set and need to do data cleaning before applying any machine learning algorithms.To handle the response variable cumulative confirmed of COVID cases with autoregressive Errors, I decided to apply first differences procedure first and fine tune it later. With the first differences of cumulative confirmed, I smoothed it via MA7 and MA14 to remove so noise. Mostly likely I will use 7 day moving average of new cases to do the following machine learning. To handle weather, I give a 14 days lags to balance out the incubation period of new COVID cases. For example, the new case in 1/20/21 is corresponding to weather in 1/06/21. For policy, I record number of new policies started with the corresponding date. And I think that the number of new policies is also likely to have negative association with number of new cases. Lastly, for search trend, I did not apply any time lag to it just yet and I believe that the proportional COVID-19 related keywords search will have positive association with number of new cases.
+
+Since there are 17 different provinces with same time points, I grouped the data by province and found out that 2 out of 17 provinces have missing data. That be say, we only have 15 provinces with full 162 time points. I picked Seoul as my training province and the two provinces near Seoul as testing province.
+
+## Model Fitting
+In this COVID-19 prediction analysis, I planed to use:
+
+1. KNN
+2. Linear Regression (OLS)
+3. Elastic Net(lasso,ridge or mixed)
+4. Random Forest
+5. Multiple Regression Analysis 
+5. Possibly SVM
+6. Possibly Functional Random Forest (taking 14/15 provinces as training functional observations and 1 province for testing)
+
+## Goal
+1. Find significant association between weather data, policy data and search trend data with new COVID cases.
+2. Predict new COVID cases using weather data, policy data and search trend data.
+3. Use multiple regression analysis to see the relationships between confirmed cases of Covid-19 and the other factors such as temperature, humidity, age,sex, and policy. 
+## Data visualization
+```{r message=FALSE, warning=FALSE}
+source("C:/Users/lyh_0/OneDrive/010spring 21 All HW/535 Project/535 R project data cleaning.r")
+source("C:/Users/lyh_0/OneDrive/010spring 21 All HW/535 Project/535 plot ready.r")
+
+```
+
+a.First, lets see the Cumulative confirmed COVID-19 cases in SK by Time on map.\
+
+```{r}
+library(gridExtra)
+library(grid)
+
+#grid.arrange(P1,P2,P3,P4,nrow=2,top = textGrob("Cumulative confirmed COVID-19 cases in SK by Time",gp = gpar(fontsize = 8)))
+P1
+P2
+P3
+P4
+
+ 
+```
+
+
+
+b.Second see Cumulative confirmed COVID-19 cases in SK and by province\
+
+```{r}
+grid.arrange(P5,P6,top = textGrob("Cumulative confirmed COVID-19 cases in SK and by province",gp = gpar(fontsize = 12)))
+
+```
+b.New confirmed COVID-19 cases by Province \
+
+```{r}
+P7
+```
+
+
+c.New cases with search trend\
+
+```{r}
+grid.arrange(P8,P9,P10,P11,nrow=2,top = textGrob("New cases with search trend",gp = gpar(fontsize = 12)))
+# Here seems the word coronavirus and cold have clear relation trend with new case.
+```
+
+d.As promise, use Seoul to train. So, I will focus on data of Seoul. \
+
+```{r}
+grid.arrange(P12,P13,top = textGrob("Seoul new confirmed COVID-19 cases w and w/o raw weather",gp = gpar(fontsize = 12)))
+
+#We are trying to match up opposite spikes. However, seem weather need to have lag 14 day to match up.
+
+```
+
+e.Lets zoom in and check out the lag weather and raw weather.\
+
+```{r}
+grid.arrange(P14,P16,top = textGrob("Seoul new confirmed COVID-19 cases w and w/o lag temp",gp = gpar(fontsize = 12)))
+
+grid.arrange(P15,P17,top = textGrob("Seoul new confirmed COVID-19 cases w and w/o lag humidity",gp = gpar(fontsize = 12)))
+
+# Observed opposite spikes.
+```
+f.Use MA7 and MA14 to smooth the new cases curve to remove noise.\
+
+```{r}
+P18
+```
+
+g.Last part of the PR is policy with  new cases with and without 14 days lags. I will use education policy as an example., other policy follows.\
+
+```{r}
+grid.arrange(P19,P20,top = textGrob("Seoul smoothed new cases with and without 14 days lags",gp = gpar(fontsize = 12)))
+#observed opposite spike on the 14 day lags plot.
+
+# total policy
+P21
+
+#More opposite spike on the 14 day lags plot, but there exists sample direction spike. 
+#This might need to tune the lag dat of different type of policy.
+
+```
+
+##Time age Data 
+
+```{r}
+time_age <- TimeAge
+time_gender <- TimeGender
+policy <- Policy
+ggplot(time_age, aes(confirmed,deceased,colour= age))+geom_point()
+```
+
+
+#### Time gender data
+```{r}
+head(time_gender)
+```
+```{r}
+ggplot(time_gender, aes(confirmed,deceased, colour= sex))+geom_point()
+```
+
+##policy data
+
+```{r}
+policy_groupby <-policy%>% group_by(type,gov_policy) %>% dplyr::summarise(n=n()) 
+policy_groupby
+```
+```{r}
+ggplot(policy, aes(y=gov_policy, fill= type), stat="count")+ geom_bar() + theme(axis.text.x = element_text(angle = 90)) 
+
+```
+ 
